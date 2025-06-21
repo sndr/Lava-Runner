@@ -1,6 +1,7 @@
 import pygame
 import random
 import sys
+import os
 from game.player import Player
 from game.platform import Platform
 from game.background import Background
@@ -8,6 +9,7 @@ from game.initial_platform import InitialPlatform
 
 class Game:
     def __init__(self):
+        pygame.mixer.init()  # Initialize the mixer
         self.window = pygame.display.set_mode((800, 400))  # WIN_WIDTH, WIN_HEIGHT
         self.title_font = pygame.font.SysFont("Arial", 50, bold=True)
         self.option_font = pygame.font.SysFont("Arial", 40)
@@ -22,6 +24,22 @@ class Game:
         self.game_over_selected_option = 0
         self.initial_platform_active = True
         self.initial_platform_disappear_time = None
+        # Load audio files
+        try:
+            self.menu_music = pygame.mixer.Sound("assets/menu_music.mp3")
+        except FileNotFoundError:
+            print("Warning: assets/menu_music.wav not found")
+            self.menu_music = None
+        try:
+            self.game_music = pygame.mixer.Sound("assets/game_music.mp3")
+        except FileNotFoundError:
+            print("Warning: assets/game_music.wav not found")
+            self.game_music = None
+        try:
+            self.jump_sound = pygame.mixer.Sound("assets/jump_music.mp3")
+        except FileNotFoundError:
+            print("Warning: assets/jump_sound.wav not found")
+            self.jump_sound = None
 
     def load_high_score(self):
         try:
@@ -52,6 +70,10 @@ class Game:
             menu_bg = pygame.Surface((800, 400))
             menu_bg.fill((0, 0, 50))
 
+        # Play menu music
+        if self.menu_music:
+            self.menu_music.play(loops=-1)
+
         options = ["Start", "Score", "Exit"]
 
         while True:
@@ -64,6 +86,8 @@ class Game:
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    if self.menu_music:
+                        self.menu_music.stop()
                     pygame.quit()
                     sys.exit()
                 if event.type == pygame.KEYDOWN:
@@ -72,6 +96,8 @@ class Game:
                     if event.key == pygame.K_DOWN:
                         self.selected_option = (self.selected_option + 1) % len(options)
                     if event.key == pygame.K_RETURN:
+                        if self.menu_music:
+                            self.menu_music.stop()
                         if self.selected_option == 0:
                             return True
                         elif self.selected_option == 1:
@@ -81,6 +107,10 @@ class Game:
                             sys.exit()
 
     def show_score_screen(self, menu_bg):
+        # Play menu music
+        if self.menu_music:
+            self.menu_music.play(loops=-1)
+
         while True:
             self.window.blit(menu_bg, (0, 0))
             self.draw_text_with_shadow("High Score", self.title_font, (255, 255, 255), (400, 150))
@@ -90,10 +120,14 @@ class Game:
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    if self.menu_music:
+                        self.menu_music.stop()
                     pygame.quit()
                     sys.exit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_b:
+                        if self.menu_music:
+                            self.menu_music.stop()
                         return
 
     def show_game_over(self):
@@ -141,6 +175,10 @@ class Game:
         self.initial_platform_disappear_time = pygame.time.get_ticks() + 2000
         self.start_time = pygame.time.get_ticks()
 
+        # Play game music
+        if self.game_music:
+            self.game_music.play(loops=-1)
+
         # Cria a primeira plataforma normal imediatamente
         base_speed = -5 - (self.score // 70)
         first_platform = Platform(x=400, y=300, speed_x=base_speed)
@@ -160,11 +198,15 @@ class Game:
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    if self.game_music:
+                        self.game_music.stop()
                     pygame.quit()
                     sys.exit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         self.player.jump()
+                        if self.jump_sound:
+                            self.jump_sound.play()
                 if event.type == pygame.USEREVENT + 1:
                     base_speed = -5 - (self.score // 70)
                     gap = random.randint(80, 150)
@@ -236,4 +278,6 @@ class Game:
             self.draw_text_with_shadow(f"Jumps: {self.player.jump_count}", self.option_font, (255, 255, 255), (85, 60), 1)
             pygame.display.flip()
 
+        if self.game_music:
+            self.game_music.stop()
         return self.show_game_over()
