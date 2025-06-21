@@ -8,8 +8,8 @@ class Player(Entity):
             surf = pygame.transform.scale(surf, (60, 80))
         except FileNotFoundError:
             surf = pygame.Surface((40, 60))
-            surf.fill((0, 255, 0))  # Verde como fallback
-        rect = surf.get_rect(bottom=player_start_y - 40, left=350)  # Centro do chão inicial
+            surf.fill((0, 255, 0))
+        rect = surf.get_rect(bottom=player_start_y - 40, left=350)
         super().__init__("Player", surf, rect)
         self.is_jumping = False
         self.on_platform = True
@@ -18,9 +18,9 @@ class Player(Entity):
     def jump(self):
         if self.jump_count > 0:
             if self.on_platform or not self.is_jumping:
-                self.speed_y = -16  # JUMP_FORCE
+                self.speed_y = -16
             else:
-                self.speed_y = -14  # DOUBLE_JUMP_FORCE
+                self.speed_y = -14
             self.is_jumping = True
             self.on_platform = False
             self.jump_count -= 1
@@ -28,8 +28,8 @@ class Player(Entity):
 
     def move(self):
         super().move()
-        self.speed_y += 0.7  # GRAVITY
-        if self.rect.bottom >= 400:  # WIN_HEIGHT
+        self.speed_y += 0.7
+        if self.rect.bottom >= 400:
             print("Jogador tocou o chão!")
             self.rect.bottom = 400
             self.speed_y = 0

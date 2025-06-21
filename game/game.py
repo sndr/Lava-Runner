@@ -1,7 +1,6 @@
 import pygame
 import random
 import sys
-import os
 from game.player import Player
 from game.platform import Platform
 from game.background import Background
@@ -9,8 +8,8 @@ from game.initial_platform import InitialPlatform
 
 class Game:
     def __init__(self):
-        pygame.mixer.init()  # Initialize the mixer
-        self.window = pygame.display.set_mode((800, 400))  # WIN_WIDTH, WIN_HEIGHT
+        pygame.mixer.init()
+        self.window = pygame.display.set_mode((800, 400))
         self.title_font = pygame.font.SysFont("Arial", 50, bold=True)
         self.option_font = pygame.font.SysFont("Arial", 40)
         self.entities: list = []
@@ -24,7 +23,6 @@ class Game:
         self.game_over_selected_option = 0
         self.initial_platform_active = True
         self.initial_platform_disappear_time = None
-        # Load audio files
         try:
             self.menu_music = pygame.mixer.Sound("assets/menu_music.mp3")
         except FileNotFoundError:
@@ -167,7 +165,7 @@ class Game:
         bg1 = Background(0)
         bg2 = Background(800)
         self.entities.extend([bg1, bg2])
-        self.player = Player(400)  # Ajustado para cima do chão inicial
+        self.player = Player(400)
         self.entities.append(self.player)
         initial_platform = InitialPlatform()
         self.entities.append(initial_platform)
@@ -179,19 +177,17 @@ class Game:
         if self.game_music:
             self.game_music.play(loops=-1)
 
-        # Cria a primeira plataforma normal imediatamente
         base_speed = -5 - (self.score // 70)
         first_platform = Platform(x=400, y=300, speed_x=base_speed)
         self.entities.append(first_platform)
-        self.last_platform_x = 400 + 150  # Ajustado para largura
+        self.last_platform_x = 400 + 150
         self.last_platform_y = 300
-        pygame.time.set_timer(pygame.USEREVENT + 1, 800)  # Inicia spawn imediatamente
+        pygame.time.set_timer(pygame.USEREVENT + 1, 800)
 
         while not self.game_over:
             pygame.time.Clock().tick(60)
             current_time = pygame.time.get_ticks()
 
-            # Verifica se o chão inicial deve sumir
             if self.initial_platform_active and current_time >= self.initial_platform_disappear_time:
                 self.initial_platform_active = False
                 self.entities = [ent for ent in self.entities if ent.name != "InitialPlatform"]
@@ -213,39 +209,34 @@ class Game:
                     new_x = self.last_platform_x + gap
                     new_platform = Platform(x=new_x, prev_y=self.last_platform_y, speed_x=base_speed)
                     self.entities.append(new_platform)
-                    self.last_platform_x = new_x + 150  # Ajustado para largura
+                    self.last_platform_x = new_x + 150
                     self.last_platform_y = new_platform.rect.bottom
                     print(f"Nova plataforma com speed_x={base_speed}")
 
-            # Atualiza velocidade de plataformas e fundo
             base_speed = -5 - (self.score // 70)
             for ent in self.entities:
                 if ent.name in ["Platform", "Background"]:
                     ent.speed_x = base_speed
 
-            # Move plataformas e fundo antes do jogador
             for ent in self.entities:
                 if not self.game_over and ent.name != "Player" and ent.name != "InitialPlatform":
                     ent.move()
                     if ent.name == "Background" and ent.rect.right <= 0:
-                        ent.rect.x += 800 * 2  # Mantém continuidade do fundo
+                        ent.rect.x += 800 * 2
 
-            # Move o jogador
             for ent in self.entities:
                 if ent.name == "Player" and not self.game_over:
                     if not ent.move():
                         self.game_over = True
 
-            # Desenha todas as entidades
             for ent in self.entities:
                 self.window.blit(ent.surf, ent.rect)
 
-            # Verifica colisões
             self.player.on_platform = False
             for ent in self.entities:
                 if (ent.name in ["Platform", "InitialPlatform"] and
                         self.player.rect.colliderect(ent.rect)):
-                    # Verifica pouso na parte superior
+
                     if (self.player.speed_y >= 0 and
                             ent.rect.top - 5 <= self.player.rect.bottom <= ent.rect.top + 5):
                         self.player.speed_y = 0
@@ -254,7 +245,7 @@ class Game:
                         self.player.on_platform = True
                         self.player.jump_count = 2
                         print(f"Pouso na plataforma {ent.name} em y={ent.rect.top}, player.bottom={self.player.rect.bottom}")
-                    # Verifica se o jogador está dentro da plataforma (tunelamento)
+
                     elif (self.player.rect.top < ent.rect.bottom and
                           self.player.rect.bottom > ent.rect.top and
                           self.player.speed_y > 0):
